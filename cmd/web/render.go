@@ -5,6 +5,8 @@ import (
 	"net/http"
 	"text/template"
 	"time"
+
+	"github.com/MFarkha/my-go-subscription-service/data"
 )
 
 var pathToTemplates = "./cmd/web/templates"
@@ -13,13 +15,13 @@ type TemplateData struct {
 	StringMap     map[string]string
 	IntMap        map[string]int
 	FloatMap      map[string]float64
-	DataMap       map[string]any
+	Data          map[string]any
 	Flash         string
 	Warning       string
 	Error         string
 	Authenticated bool
 	Now           time.Time
-	// User            *data.user
+	User          *data.User
 }
 
 func (app *Config) render(w http.ResponseWriter, r *http.Request, t string, td *TemplateData) {
@@ -44,13 +46,13 @@ func (app *Config) render(w http.ResponseWriter, r *http.Request, t string, td *
 	tmpl, err := template.ParseFiles(templateSlice...)
 	if err != nil {
 		app.ErrorLog.Println("error parsing template files", err)
-		http.Error(w, err.Error(), 500)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
 	if err := tmpl.Execute(w, app.AddDefaultData(td, r)); err != nil {
 		app.ErrorLog.Println("error executing template files", err)
-		http.Error(w, err.Error(), 500)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 }
@@ -62,6 +64,11 @@ func (app *Config) AddDefaultData(td *TemplateData, r *http.Request) *TemplateDa
 	if app.isAuthenticated(r) {
 		td.Authenticated = true
 		// TODO: get more user information
+		u, ok := app.Session.Get(r.Context(), "user").(data.User)
+		if !ok {
+			app.ErrorLog.Println("Cant get error from the session:", u)
+		}
+		td.User = &u
 	} else {
 		td.Authenticated = false
 	}

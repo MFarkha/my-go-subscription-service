@@ -4,3 +4,4 @@
 .env.Makefile
 tmp
 db_data
+.DS_Store

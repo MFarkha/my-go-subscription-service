@@ -50,6 +50,8 @@ func main() {
 		Models:   data.New(db),
 	}
 	// set up mail
+	app.Mailer = app.createMail()
+	go app.listenForMail()
 
 	// listen for signals (SIGTERM and SIGINT)
 	go app.listenForShutdown()
@@ -147,9 +149,31 @@ func (app *Config) listenForShutdown() {
 
 func (app *Config) shutdown() {
 	app.InfoLog.Println("would run clean up tasks...")
-
 	// block until waitgroup is empty
 	app.Wait.Wait()
+	app.Mailer.DoneChan <- true
 
 	app.InfoLog.Println("closing channels and shutting down the application")
+	close(app.Mailer.ErrorChan)
+	close(app.Mailer.MailerChan)
+	close(app.Mailer.DoneChan)
+}
+
+func (app *Config) createMail() Mail {
+	errorChan := make(chan error)
+	mailerChan := make(chan Message, 100)
+	mailerDoneChan := make(chan bool)
+	m := Mail{
+		Domain:      "localhost",
+		Host:        "localhost",
+		Port:        1025,
+		Encryption:  "none",
+		FromAddress: "info@mycompany.com",
+		FromName:    "info",
+		ErrorChan:   errorChan,
+		MailerChan:  mailerChan,
+		DoneChan:    mailerDoneChan,
+		Wait:        app.Wait,
+	}
+	return m
 }
