@@ -1,3 +1,6 @@
 .trunk
-.out
+*.out
 .env
+.env.Makefile
+tmp
+db_data
