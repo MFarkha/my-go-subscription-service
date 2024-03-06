@@ -2,6 +2,6 @@
 *.out
 .env
 .env.Makefile
-tmp
+tmp/*
 db_data
 .DS_Store

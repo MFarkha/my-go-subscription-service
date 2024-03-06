@@ -45,13 +45,13 @@ func (app *Config) render(w http.ResponseWriter, r *http.Request, t string, td *
 
 	tmpl, err := template.ParseFiles(templateSlice...)
 	if err != nil {
-		app.ErrorLog.Println("error parsing template files", err)
+		app.ErrorLog.Println("error parsing template files:", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
 	if err := tmpl.Execute(w, app.AddDefaultData(td, r)); err != nil {
-		app.ErrorLog.Println("error executing template files", err)
+		app.ErrorLog.Println("error executing template files:", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -63,12 +63,12 @@ func (app *Config) AddDefaultData(td *TemplateData, r *http.Request) *TemplateDa
 	td.Error = app.Session.PopString(r.Context(), "error")
 	if app.isAuthenticated(r) {
 		td.Authenticated = true
-		// TODO: get more user information
 		u, ok := app.Session.Get(r.Context(), "user").(data.User)
 		if !ok {
 			app.ErrorLog.Println("Cant get error from the session:", u)
+		} else {
+			td.User = &u
 		}
-		td.User = &u
 	} else {
 		td.Authenticated = false
 	}
