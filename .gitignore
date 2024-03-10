@@ -3,5 +3,6 @@
 .env
 .env.Makefile
 tmp/*
-db_data
+db-data/postgres
+db-data/redis
 .DS_Store
